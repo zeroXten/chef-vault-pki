@@ -1,0 +1,72 @@
+#!/usr/bin/env ruby
+
+require 'openssl'
+require 'base64'
+require 'optparse'
+
+version = '0.1.0'
+options = {
+  :name => "chef_vault_pki_ca",
+  :expire => 3655,
+  :output => 'json'
+}
+
+OptionParser.new do |opts|
+  opts.banner = "Usage chef-vault-pki [options]"
+
+  opts.on("-n", "--name NAME", "NAME for SSL certificate. Defaults to #{options[:name]}") do |n|
+    options[:name] = n
+  end
+
+  opts.on("-e", "--expires DAYS", "Certificate expires in DAYS days. Defaults to #{options[:expire]}") do |e|
+    options[:expire] = e
+  end
+
+  opts.on("-o", "--output FORMAT", "Output format (json,text). Defaults to #{options[:output]}") do |o|
+    options[:output] = o
+  end
+
+  opts.on("-h", "--help", "Show this message") do
+    puts opts
+    exit
+  end
+
+  opts.on("-v", "--version", "Show version") do
+    puts "Version #{version}"
+    exit
+  end
+
+end.parse!
+
+key = OpenSSL::PKey::RSA.new 2048
+
+name = OpenSSL::X509::Name.parse "CN=#{options[:name]}"
+
+expires = Time.now + (options[:expire] * 3600 * 24)
+
+cert = OpenSSL::X509::Certificate.new
+cert.version = 3
+cert.serial = 0
+cert.not_before = Time.now
+cert.not_after = expires
+cert.public_key = key.public_key
+cert.subject = name
+cert.issuer = name
+#cert.sign key, OpenSSL::Digest::SHA1.new
+extension_factory = OpenSSL::X509::ExtensionFactory.new
+extension_factory.subject_certificate = cert
+extension_factory.issuer_certificate = cert
+extension_factory.create_extension 'subjectKeyIdentifier', 'hash'
+extension_factory.create_extension 'basicConstraints', 'CA:TRUE', true
+extension_factory.create_extension 'keyUsage', 'cRLSign,keyCertSign', true
+cert.sign key, OpenSSL::Digest::SHA1.new
+
+case options[:output].downcase
+when 'json'
+  require 'json'
+  puts ({ :cert => cert.to_pem, :key => key.to_pem }.to_json)
+else
+  puts cert.to_pem
+  puts key.to_pem
+end
+
