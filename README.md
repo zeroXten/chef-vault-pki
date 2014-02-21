@@ -1,6 +1,6 @@
 # chef-vault-pki
 
-A simple script to generate a CA for use with the `chef_vault_pki` Chef cookbook.
+A simple script to generate a CA for use with the [chef\_vault\_pki](https://github.com/zeroXten/chef_vault_pki) Chef cookbook.
 
 # Installations
 
