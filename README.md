@@ -10,7 +10,7 @@ Gem is available here:
 
 # Usage
 
-    $ ./bin/chef-vault-pki --help
+    $ chef-vault-pki --help
     Usage chef-vault-pki [options]
         -n, --name NAME                  NAME for SSL certificate. Defaults to chef_vault_pki_ca
         -e, --expires DAYS               Certificate expires in DAYS days. Defaults to 3655
