@@ -1,20 +1,33 @@
 #!/usr/bin/env ruby
 
-require 'openssl'
+require 'chef-vault-pki'
 require 'base64'
 require 'optparse'
+require 'json'
 
-version = '0.1.0'
+version = '0.2.0'
 options = {
+  :key_size => 2048,
   :name => "chef_vault_pki_ca",
-  :expire => 3655,
+  :expires => 365,
   :output => 'json'
 }
 
+
 OptionParser.new do |opts|
-  opts.banner = "Usage chef-vault-pki [options]"
+  opts.banner = "Usage chef-vault-pki [command] [options]"
+  opts.separator ""
+  opts.separator "Commands:"
+  opts.separator "    ca - Creates a CA (default)"
+  opts.separator "    client - Creates a client (CA must be provided on STDIN as JSON)"
+  opts.separator ""
+  opts.separator "Common options:"
 
   opts.on("-n", "--name NAME", "NAME for SSL certificate. Defaults to #{options[:name]}") do |n|
+    options[:name] = n
+  end
+
+  opts.on("-k", "--key_size KEY_SIZE", "Use KEY_SIZE bits for the key. Defaults to #{options[:key_size]}") do |n|
     options[:name] = n
   end
 
@@ -38,35 +51,26 @@ OptionParser.new do |opts|
 
 end.parse!
 
-key = OpenSSL::PKey::RSA.new 2048
+command = ARGV.shift || 'ca'
 
-name = OpenSSL::X509::Name.parse "CN=#{options[:name]}"
+case command
+when 'ca'
+  pki = ChefVaultPKI::CA.new options
+  pki.generate!
+when 'client'
+  ca_pems = JSON.parse(STDIN.read)
+  ca = ChefVaultPKI::CA.new
+  ca.load! ca_pems
 
-expires = Time.now + (options[:expire] * 3600 * 24)
-
-cert = OpenSSL::X509::Certificate.new
-cert.version = 3
-cert.serial = 0
-cert.not_before = Time.now
-cert.not_after = expires
-cert.public_key = key.public_key
-cert.subject = name
-cert.issuer = name
-#cert.sign key, OpenSSL::Digest::SHA1.new
-extension_factory = OpenSSL::X509::ExtensionFactory.new
-extension_factory.subject_certificate = cert
-extension_factory.issuer_certificate = cert
-extension_factory.create_extension 'subjectKeyIdentifier', 'hash'
-extension_factory.create_extension 'basicConstraints', 'CA:TRUE', true
-extension_factory.create_extension 'keyUsage', 'cRLSign,keyCertSign', true
-cert.sign key, OpenSSL::Digest::SHA1.new
+  pki = ChefVaultPKI::Client.new options
+  pki.generate! ca
+end
 
 case options[:output].downcase
 when 'json'
-  require 'json'
-  puts ({ :cert => cert.to_pem, :key => key.to_pem }.to_json)
+  puts ({ :cert => pki.cert.to_pem, :key => pki.key.to_pem }.to_json)
 else
-  puts cert.to_pem
-  puts key.to_pem
+  puts pki.cert.to_pem
+  puts pki.key.to_pem
 end
 
