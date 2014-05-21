@@ -5,17 +5,17 @@ require 'base64'
 require 'optparse'
 require 'json'
 
-version = '0.2.0'
+version = '0.3.0'
 options = {
+  :name => nil,
   :key_size => 2048,
-  :name => "chef_vault_pki_ca",
   :expires => 365,
   :output => 'json'
 }
 
 
 OptionParser.new do |opts|
-  opts.banner = "Usage chef-vault-pki [command] [options]"
+  opts.banner = "Usage chef-vault-pki [command] --name NAME [options]"
   opts.separator ""
   opts.separator "Commands:"
   opts.separator "    ca - Creates a CA (default)"
@@ -23,7 +23,7 @@ OptionParser.new do |opts|
   opts.separator ""
   opts.separator "Common options:"
 
-  opts.on("-n", "--name NAME", "NAME for SSL certificate. Defaults to #{options[:name]}") do |n|
+  opts.on("-n", "--name NAME", "NAME for SSL certificate. REQUIRED") do |n|
     options[:name] = n
   end
 
@@ -50,6 +50,11 @@ OptionParser.new do |opts|
   end
 
 end.parse!
+
+if options[:name].nil?
+  puts "NAME option is required"
+  exit(1)
+end
 
 command = ARGV.shift || 'ca'
 
