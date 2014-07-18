@@ -5,7 +5,7 @@ require 'base64'
 require 'optparse'
 require 'json'
 
-version = '0.3.0'
+version = '0.4.0'
 options = {
   :name => nil,
   :key_size => 2048,
@@ -58,7 +58,7 @@ end
 
 command = ARGV.shift || 'ca'
 
-case command
+case command.downcase
 when 'ca'
   pki = ChefVaultPKI::CA.new options
   pki.generate!
@@ -75,7 +75,13 @@ case options[:output].downcase
 when 'json'
   puts ({ :cert => pki.cert.to_pem, :key => pki.key.to_pem }.to_json)
 else
+  if command.downcase == 'client'
+    print "\n# CA certificate\n\n"
+    puts ca.cert.to_pem
+  end
+  print "\n# Client certificate\n\n"
   puts pki.cert.to_pem
+  print "\n# Client private key\n\n"
   puts pki.key.to_pem
 end
 

@@ -1,7 +1,7 @@
 Gem::Specification.new do |s|
   s.name        = 'chef-vault-pki'
-  s.version     = '0.3.0'
-  s.date        = '2014-05-21'
+  s.version     = '0.4.0'
+  s.date        = '2014-07-18'
   s.summary     = "Tool for chef_vault_pki cookbook"
   s.description = "Tool for chef_vault_pki cookbook"
   s.authors     = ["zeroXten"]
