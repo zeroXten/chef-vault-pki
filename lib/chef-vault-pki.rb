@@ -83,7 +83,7 @@ module ChefVaultPKI
       @csr.sign @key, OpenSSL::Digest::SHA1.new
 
       @cert = OpenSSL::X509::Certificate.new
-      @cert.serial = 0
+      @cert.serial = Time.now.to_i
       @cert.version = 2
       @cert.not_before = not_before
       @cert.not_after = not_after

@@ -5,7 +5,7 @@ require 'base64'
 require 'optparse'
 require 'json'
 
-version = '0.4.1'
+version = '0.4.2'
 options = {
   :name => nil,
   :key_size => 2048,
