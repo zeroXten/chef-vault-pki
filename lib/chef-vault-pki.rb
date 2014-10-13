@@ -29,7 +29,7 @@ module ChefVaultPKI
 
       @cert = OpenSSL::X509::Certificate.new
       @cert.version = 3
-      @cert.serial = 0
+      @cert.serial = Time.now.to_i
       @cert.not_before = not_before
       @cert.not_after = not_after
       @cert.public_key = key.public_key
